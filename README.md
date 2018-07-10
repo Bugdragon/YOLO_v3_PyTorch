@@ -1,2 +1,4 @@
 # YOLO_v3_PyTorch
-## aaaaaaaaaaaaaaa
+* Python 3.5
+* PyTroch 0.3
+
