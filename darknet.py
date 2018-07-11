@@ -39,4 +39,5 @@ def create_modules(blocks):
  output_filters = [] # number of output conv kernel
  
  for index, x in enumerate(blocks[1:]):
-  module = nn. 
+  module = nn.Sequential()
+   fdf defkkk
