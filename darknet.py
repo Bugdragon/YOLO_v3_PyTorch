@@ -53,7 +53,7 @@ def create_modules(blocks):
   for index, x in enumerate(blocks[1:]):
     module = nn.Sequential()
     # convolutional模块有卷积层、批量归一化层和leaky ReLU激活层
-    if (x["type" == "convolutional"]):
+    if (x["type"] == "convolutional"):
       # get layer info
       activation = x["activation"]
       try:
@@ -74,7 +74,7 @@ def create_modules(blocks):
         pad = 0
       
       # Add conv layer
-      conv = nnge.Conv2d(prev_filters, filters, kernel_size, stride, pad, bias = bias)
+      conv = nn.Conv2d(prev_filters, filters, kernel_size, stride, pad, bias = bias)
       module.add_module("conv_{0}".format(index), conv)
 
       # Add batch norm layer
@@ -123,7 +123,7 @@ def create_modules(blocks):
       mask = [int(x) for x in mask]
 
       # 保存anchors box
-      anchors = x["angers"].split(",")
+      anchors = x["anchors"].split(",")
       anchors = [int(a) for a in anchors]
       # 两个一组，还ge和宽
       anchors = [(anchors[i], anchors[i+1]) for i in range(0, len(anchors), 2)]
