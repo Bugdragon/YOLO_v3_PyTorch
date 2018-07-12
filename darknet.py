@@ -1,12 +1,19 @@
 from __future__ import division
-#12123
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
 from util import *
-
+ 
+def get_test_input():
+  img = cv2.imread("dog-cycle-car.png")
+  img = cv2.resize(img, (416,416)) # 调整输入图像维度
+  img_ = img[:,:,::-1].transpose((2,0,1)) # BGR -> RGB | H X W C -> C X H X W
+  img_ = img_[np.newaxis,:,:,:]/255.0 # 添加通道，0，作为正则通道
+  img_ = torch.from_numpy(img_).float() # 转换成float
+  img_ = Variable(img_) # 转成变量
 def parse_cfg(cfgfile):
   """
   Takes a cfg file,returns a list of blocks. 
@@ -139,8 +146,9 @@ def create_modules(blocks):
 
   return (net_info, module_list)
 
-blocks = parse_cfg("cfg/yolov3.cfg")
-print(create_modules(blocks))
+# 解析YOLO_v3配置文件
+# blocks = parse_cfg("cfg/yolov3.cfg")
+# print(create_modules(blocks))
 
 class Darknet(nn.Module):
   # 用net_info和module_list对网络进行初始化
@@ -156,7 +164,7 @@ class Darknet(nn.Module):
     # 缓存每个层的输出特征图，以备route层和shortcut层使用
     outputs = {}
 
-    write = 0
+    write = 0 # 是否遇到第一个检测图flag
     for i, module in enumerate(modules):
       module_type = (module["type"])
 
@@ -196,6 +204,7 @@ class Darknet(nn.Module):
         # transform
         x = x.data
         x = predict_transform(x, inp_dim, anchors, num_classes, CUDA)
+        # 如果收集器（容纳检测的张量）没有初始化
         if not write:
           detections = x
           write = 1
@@ -207,6 +216,7 @@ class Darknet(nn.Module):
 
     return detections
 
+# 测试向前传播
   
 
 

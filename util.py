@@ -26,4 +26,38 @@ def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
     prediction[:,:,0] = torch.sigmoid(prediction[:,:,0])
     prediction[:,:,1] = torch.sigmoid(prediction[:,:,1])
     prediction[:,:,4] = torch.sigmoid(prediction[:,:,4])
+
+    # 将网格偏移添加到中心坐标预测中
+    grid = np.arange(grid_size)
+    a,b = np.meshgrid(grid, grid)
+
+    x_offset = torch.FloatTensor(a).view(-1,1)
+    y_offset = torch.FloatTensor(b).view(-1,1)
+
+    if CUDA:
+        x_offset = x_offset.cuda()
+        y_offset = y_offset.cuda()
+    
+    x_y_offset = torch.cat((x_offset, y_offset), 1).repeat(1,num_anchors).view(-1,2).unsqueeze(0)
+
+    prediction[:,:,2] += x_y_offset
+
+    # 将锚点应用到边界框维度中
+    anchors = torch.FloatTensor(anchors)
+
+    if CUDA:
+        anchors = anchors.cuda()
+    
+    anchors = anchors.repeat(grid_size*grid_size, 1).unsqueeze(0)
+    prediction[:,:,2:4] = torch.exp(prediction[:,:,2:4])*anchors
+
+    # 将sigmoid激活函数应用到类别分数中
+    prediction[:,:,5:5 + num_classes] = torch.sigmoid((prediction[:,:,5:5 + num_classes]))
+
+    # 将检测图的大小调整到与输入图像大小一致，乘以stride变量（边界框属性根据特征图大小而定）
+    prediction[:,:,:4] *= stride
+
+    return prediction
+
+
     
