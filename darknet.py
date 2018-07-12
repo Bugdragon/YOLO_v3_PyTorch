@@ -75,7 +75,7 @@ def create_modules(blocks):
       
       # Add conv layer
       conv = nn.Conv2d(prev_filters, filters, kernel_size, stride, pad, bias = bias)
-      module.add_mjiasuqianxiangchuanboodule("conv_{0}".format(index), conv)
+      module.add_module("conv_{0}".format(index), conv)
 
       # Add batch norm layer
       if batch_normalize:
@@ -139,8 +139,8 @@ def create_modules(blocks):
 
   return (net_info, module_list)
 
-# blocks = parse_cfg("cfg/yolov3.cfg")
-# print(create_modules(blocks))
+blocks = parse_cfg("cfg/yolov3.cfg")
+print(create_modules(blocks))
 
 class Darknet(nn.Module):
   # 用net_info和module_list对网络进行初始化
