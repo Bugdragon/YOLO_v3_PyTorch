@@ -14,6 +14,6 @@
 
 ### 版本条件
 * Ubuntu 18.04LTS(64-bit)
-* Python 3.6(pip3)
+* Python 3.6.5(pip3)
 * torch 0.4.0(cpu)
 * OpenCV 3.4.2
