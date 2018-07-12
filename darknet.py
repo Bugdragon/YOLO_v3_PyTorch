@@ -75,7 +75,7 @@ def create_modules(blocks):
       
       # Add conv layer
       conv = nn.Conv2d(prev_filters, filters, kernel_size, stride, pad, bias = bias)
-      module.add_module("conv_{0}".format(index), conv)
+      module.add_mjiasuqianxiangchuanboodule("conv_{0}".format(index), conv)
 
       # Add batch norm layer
       if batch_normalize:
@@ -149,8 +149,11 @@ class Darknet(nn.Module):
     self.blocks = parse_cfg(cfgfile)
     self.net_info, self.module_list = create_modules(self.blocks)
 
+  # CUDA为true，则用GPU加速前向传播
   def forward(self, x, CUDA):
+    # delf.blocks第一个元素是net块
     modules = self.blocks[1:]
+    # 缓存每个层的输出特征图，以备route层和shortcut层使用
     outputs = {}
 
     write = 0
@@ -201,7 +204,7 @@ class Darknet(nn.Module):
           detections = torch.cat((detections, x), 1)
       
       outputs[i] = x
-      
+
     return detections
 
   
