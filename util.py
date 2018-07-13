@@ -9,6 +9,7 @@ import cv2
 
 # 把检测特征图转换成二维张量，张量的每一行对应边界框的属性，5个参数：输出，输入图像的维度
 def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA=False):
+    
     batch_size = prediction.size(0)
     stride = inp_dim // prediction.size(2)
     grid_size = inp_dim // stride
