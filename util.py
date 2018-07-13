@@ -8,7 +8,7 @@ import numpy as np
 import cv2
 
 # 把检测特征图转换成二维张量，张量的每一行对应边界框的属性，5个参数：输出，输入图像的维度
-def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
+def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA=False):
     batch_size = prediction.size(0)
     stride = inp_dim // prediction.size(2)
     grid_size = inp_dim // stride
@@ -40,7 +40,7 @@ def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
     
     x_y_offset = torch.cat((x_offset, y_offset), 1).repeat(1,num_anchors).view(-1,2).unsqueeze(0)
 
-    prediction[:,:,2] += x_y_offset
+    prediction[:,:,:2] += x_y_offset
 
     # 将锚点应用到边界框维度中
     anchors = torch.FloatTensor(anchors)

@@ -8,12 +8,16 @@ import numpy as np
 from util import *
  
 def get_test_input():
+  # 测试前向传播
   img = cv2.imread("dog-cycle-car.png")
   img = cv2.resize(img, (416,416)) # 调整输入图像维度
-  img_ = img[:,:,::-1].transpose((2,0,1)) # BGR -> RGB | H X W C -> C X H X W
-  img_ = img_[np.newaxis,:,:,:]/255.0 # 添加通道，0，作为正则通道
+  img_ = img[:,:,::-1].transpose((2,0,1)) # BGR -> RGB | H x W x C -> C x H x W
+  img_ = img_[np.newaxis,:,:,:]/255.0 # 添加通道，置0，作为正则通道
   img_ = torch.from_numpy(img_).float() # 转换成float
   img_ = Variable(img_) # 转成变量
+
+  return img_
+
 def parse_cfg(cfgfile):
   """
   Takes a cfg file,returns a list of blocks. 
@@ -76,12 +80,12 @@ def create_modules(blocks):
       stride= int(x["stride"]) # 步长
 
       if padding:
-        pad = (kernel_size - 1) // 2 # 运算后，宽度和高度不变
+        padding = (kernel_size - 1) // 2 # 运算后，宽度和高度不变
       else:
-        pad = 0
+        padding = 0
       
       # Add conv layer
-      conv = nn.Conv2d(prev_filters, filters, kernel_size, stride, pad, bias = bias)
+      conv = nn.Conv2d(prev_filters, filters, kernel_size, stride, padding, bias = bias)
       module.add_module("conv_{0}".format(index), conv)
 
       # Add batch norm layer
@@ -110,13 +114,18 @@ def create_modules(blocks):
         end = int(x["layers"][1])
       except:
         end = 0 # 没有end
+      # Positive anotation
+      if start > 0:
+        start = start - index
+      if end > 0:
+        end = end - index
       route = EmptyLayer() # 创建空层
       module.add_module("route_{0}".format(index), route)
-      if end < index:
+      if end < 0:
         # 计算卷积数量，即两层叠加
-        filters = output_filters[start] + output_filters[end]
+        filters = output_filters[index + start] + output_filters[index + end]
       else:
-        filters = output_filters[start] 
+        filters = output_filters[index + start] 
 
     # shortcut捷径层（跳过连接），捷径层是将前一层的特征图添加到后面的层上
     elif (x["type"] == "shortcut"):
@@ -158,7 +167,7 @@ class Darknet(nn.Module):
     self.net_info, self.module_list = create_modules(self.blocks)
 
   # CUDA为true，则用GPU加速前向传播
-  def forward(self, x, CUDA):
+  def forward(self, x):
     # delf.blocks第一个元素是net块
     modules = self.blocks[1:]
     # 缓存每个层的输出特征图，以备route层和shortcut层使用
@@ -187,7 +196,7 @@ class Darknet(nn.Module):
 
           map1 = outputs[i + layers[0]]
           map2 = outputs[i + layers[1]]
-          x = torch.cat((map1, map2), 1)
+          x = torch.cat((map1, map2), 1) # 参数置1代表沿深度级联两个特征图
 
       elif module_type == "shortcut":
         from_ = int(module["from"])
@@ -203,7 +212,7 @@ class Darknet(nn.Module):
 
         # transform
         x = x.data
-        x = predict_transform(x, inp_dim, anchors, num_classes, CUDA)
+        x = predict_transform(x, inp_dim, anchors, num_classes)
         # 如果收集器（容纳检测的张量）没有初始化
         if not write:
           detections = x
@@ -217,6 +226,10 @@ class Darknet(nn.Module):
     return detections
 
 # 测试向前传播
+model = Darknet("cfg/yolov3.cfg")
+inp = get_test_input()
+pred = model(inp)
+print(pred)
   
 
 
