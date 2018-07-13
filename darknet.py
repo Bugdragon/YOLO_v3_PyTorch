@@ -226,10 +226,10 @@ class Darknet(nn.Module):
     return detections
 
 # 测试向前传播
-model = Darknet("cfg/yolov3.cfg")
-inp = get_test_input()
-pred = model(inp)
-print(pred)
+# model = Darknet("cfg/yolov3.cfg")
+# inp = get_test_input()
+# pred = model(inp)
+# print(pred)
   
 
 
