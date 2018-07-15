@@ -9,7 +9,7 @@ import cv2
 import matplotlib.pyplot as plt
 from bbox import bbox_iou
 
-# 把检测特征图转换成二维张量，张量的每一行对应边界框的属性，5个参数：输出，输入图像的维度
+# 把检测特征图转换成二维张量，张量的每一行对应边界框的属性，5个参数：输出，输入图像的维度……
 def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA=False):
     
     batch_size = prediction.size(0)
@@ -61,7 +61,13 @@ def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA=False):
     prediction[:,:,:4] *= stride
 
     return 
-    
+
+# 加载类别，返回字典——将每个类别的索引映射到其名称的字符串
+def load_classes(namesfile):
+    fp = open(namesfile, "r")
+    names = fp.read().split("\n")[:-1]
+    return names
+
 # 获取任意给定图像中存在的类别
 def unique(tensor):
     tensor_np =tensor.cpu().numpy()
@@ -145,7 +151,7 @@ def write_results(prediction, confidence, num_classes, nms_conf=0.4):
                 # 对于每一个检测
                 for i in range(idx):
                     # 获取正在查看的box之后所有boxes的IoUs
-                    try：
+                    try:
                         ious = bbox_iou(image_pred_class[i].unsqueeze(0), image_pred_class[i+1:])
                     except ValueError: # image_pred_class[i+1,:]返回空张量
                         break
