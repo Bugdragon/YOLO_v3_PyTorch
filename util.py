@@ -6,6 +6,8 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
+from bbox import bbox_iou
 
 # 把检测特征图转换成二维张量，张量的每一行对应边界框的属性，5个参数：输出，输入图像的维度
 def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA=False):
@@ -111,15 +113,69 @@ def write_results(prediction, confidence, num_classes, nms_conf=0.4):
         seq = (image_pred[:,:5], max_conf, max_conf_score)
         image_pred = torch.cat(seq, 1)
 
-        # 删除objectness置信度小于阈值的置0条目
+        # 删除objectness置信度小于阈值的置0条目,try-except处理无检测结果的情况，continue跳过对本图像的循环
         non_zero_ind = torch.nonzero(image_pred[:,4])
-        image_pred_ = image_pred[non_zero_ind.squeeze(),:].view(-1,7)
-
-        # 获得一个图像的所有种类,try-except处理无检测结果的情况
         try:
-            image_classes = unique(image_pred_[:,-1])
+            image_pred_ = image_pred[non_zero_ind.squeeze(),:].view(-1,7) # 7列
         except:
             continue
+        
+        # PyTorch 0.4兼容
+        if image_pred_.shape[0] == 0:
+            continue
+
+        # 获得一个图像的所有种类
+        image_classes = unique(image_pred_[:,-1])
+        
+        # 按类别执行NMS
+        for cls in img_classes:
+            # 得到一个类别的所有检测
+            cls_mask = image_pred_*(image_pred_[:,-1] == cls).float().unsequeeze(1) 
+            class_mask_ind = torch.nonzero(cls_mask[:,-2]).squeeze()
+
+            image_pred_class = image_pred_[class_mask_ind].view(-1,7)
+
+            # 对所有检测排序,按照objectness置信度
+            conf_sort_index = torch.sort(image_pred_class[:,4], descending=True)[1]
+            image_pred_class = image_pred_class[conf_sort_index]
+            idx = image_pred_class.size(0)
+
+            # 执行NMS
+            if nms:
+                # 对于每一个检测
+                for i in range(idx):
+                    # 获取正在查看的box之后所有boxes的IoUs
+                    try：
+                        ious = bbox_iou(image_pred_class[i].unsqueeze(0), image_pred_class[i+1:])
+                    except ValueError: # image_pred_class[i+1,:]返回空张量
+                        break
+                    except IndexError: # image_pred_class移除部分后，idx索引越界
+                        break
+                    
+                    # 清除IoU>阈值的检测
+                    iou_mask = (ious < nms_conf).float().unsqueeze(1)
+                    image_pred_class[i+1:] *= iou_mask
+
+                    # 移除0条目
+                    non_zero_ind = torch.nonzero(image_pred_class[:,4]).squeeze()
+                    image_pred_class = image_pred_class[non_zero_ind].view(-1,7)
+
+            batch_ind = image_pred_class.new(image_pred_class.size(0), 1).fill_(ind)
+            seq = batch_ind, image_pred_class
+            if not write:
+                output = torch.cat(seq, 1)
+                write = True
+            else:
+                out = torch.cat(seq, 1)
+                output = torch.cat(output, out)
+    # 输出一个形状为Dx8的张量；其中D是所有图像中的「真实」检测结果，每个都用一行表示。
+    # 每一个检测结果都有8个属性，即该检测结果所属的batch中图像的索引、4个对角的坐标、objectness分数、有最大置信度的类别的分数、该类别的索引。
+    try:
+        return output
+    except:
+        return 0
+
+        
 
 
     
