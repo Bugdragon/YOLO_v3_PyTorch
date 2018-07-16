@@ -1,5 +1,5 @@
 # YOLO_v3_PyTorch
-检测器的*输出样例*：
+YOLOv3目标检测器的**输出样例**：
 ![Image text](https://raw.githubusercontent.com/Bugdragon/YOLO_v3_PyTorch/master/det/det_%E5%B7%A5%E4%BD%9C%E7%BB%86%E8%83%9E1.png)
 
 ### 代码实现
