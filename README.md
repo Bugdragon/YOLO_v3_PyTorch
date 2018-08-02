@@ -3,11 +3,11 @@ YOLOv3目标检测器的**输出样例**：
 ![Image text](https://raw.githubusercontent.com/Bugdragon/YOLO_v3_PyTorch/master/det/det_%E5%B7%A5%E4%BD%9C%E7%BB%86%E8%83%9E1.png)
 
 ### 代码实现
-1. 创建 YOLO 网络层级
-2. 实现网络的前向传播
-3. objectness 置信度阈值和非极大值抑制
-4. 设计输入和输出管道
-5. 在视频/网络摄像头上运行检测器
+1. 创建 YOLO 网络层级☑
+2. 实现网络的前向传播☑
+3. objectness 置信度阈值和非极大值抑制☑
+4. 设计输入和输出管道☑
+5. 在视频/网络摄像头上运行检测器☑
 
 ### 背景知识
 + 卷积神经网络的工作原理，包括残差块、跳过连接和上采样；
